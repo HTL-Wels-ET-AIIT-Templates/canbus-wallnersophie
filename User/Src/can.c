@@ -21,8 +21,7 @@
 /* Private define ------------------------------------------------------------*/
 
 // ToDo: korrekte Prescaler-Einstellung
-#define   CAN1_CLOCK_PRESCALER    1000
-
+#define   CAN1_CLOCK_PRESCALER    16 	// Berechnung siehe Angabe (nach Absprache mit Klassenkollegen nehmen wir einfach alle diesen Wert)
 /* Private variables ---------------------------------------------------------*/
 CAN_HandleTypeDef     canHandle;
 

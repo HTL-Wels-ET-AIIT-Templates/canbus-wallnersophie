@@ -76,9 +76,10 @@ int main(void)
 
 	LCD_SetFont(&Font8);
 	LCD_SetColors(LCD_COLOR_MAGENTA, LCD_COLOR_BLACK); // TextColor, BackColor
-	LCD_DisplayStringAtLineMode(39, "copyright CAN Experts!", CENTER_MODE);
+	LCD_DisplayStringAtLineMode(39, "Sophie Wallner", CENTER_MODE);
 
 	// ToDo: set up CAN peripherals
+	canInit();
 
 
 
@@ -102,11 +103,11 @@ int main(void)
 		LCD_SetPrintPosition(0, 18);
 		printf("   Timer: %.1f", cnt/1000.0);
 
-		// test touch interface
-		int x, y;
-		if (GetTouchState(&x, &y)) {
-			LCD_FillCircle(x, y, 5);
-		}
+//		// test touch interface
+//		int x, y;
+//		if (GetTouchState(&x, &y)) {
+//			LCD_FillCircle(x, y, 5);
+//		}
 
 
 	}
