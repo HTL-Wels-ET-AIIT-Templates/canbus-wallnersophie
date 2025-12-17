@@ -82,6 +82,7 @@ int main(void)
 	canInit();
 
 
+	int flm = 0;
 
 	/* Infinite loop */
 	while (1)
@@ -90,6 +91,15 @@ int main(void)
 		HAL_Delay(10);
 
 		// ToDo: send data over CAN when user button has been pressed
+
+		if (GetUserButtonPressed()){
+			if(!flm){
+				flm = 1;
+				canSendTask();
+			}
+		}else{
+			flm = 0;
+		}
 
 
 
@@ -108,6 +118,9 @@ int main(void)
 //		if (GetTouchState(&x, &y)) {
 //			LCD_FillCircle(x, y, 5);
 //		}
+
+
+
 
 
 	}

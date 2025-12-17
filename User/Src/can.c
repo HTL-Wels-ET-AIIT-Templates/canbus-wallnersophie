@@ -23,6 +23,7 @@
 // ToDo: korrekte Prescaler-Einstellung
 #define   CAN1_CLOCK_PRESCALER    16 	// Berechnung siehe Angabe (nach Absprache mit Klassenkollegen nehmen wir einfach alle diesen Wert)
 /* Private variables ---------------------------------------------------------*/
+
 CAN_HandleTypeDef     canHandle;
 
 /* Private function prototypes -----------------------------------------------*/
@@ -44,6 +45,7 @@ void canInitHardware(void) {
  * @return none
  */
 void canInit(void) {
+
 	canInitHardware();
 
 	LCD_SetFont(&Font12);
@@ -55,7 +57,7 @@ void canInit(void) {
 	LCD_SetPrintPosition(5,1);
 	printf("Send-Cnt:");
 	LCD_SetPrintPosition(5,15);
-	printf("%5d", 0);
+	printf("%5d", 0);		// Null für init, dieser Platz am Display wird später noch Überscriben wo dann die Varaiable drinnen ist die hoch zählt
 	LCD_SetPrintPosition(7,1);
 	printf("Recv-Cnt:");
 	LCD_SetPrintPosition(7,15);
@@ -70,6 +72,8 @@ void canInit(void) {
 
 	// ToDo (2): set up DS18B20 (temperature sensor)
 
+	tempSensorInit();
+
 }
 
 /**
@@ -81,22 +85,47 @@ void canSendTask(void) {
 	// ToDo declare the required variables
 	static unsigned int sendCnt = 0;
 
+	CAN_TxHeaderTypeDef txHeader;
+
+	uint8_t txData[8];
+	uint32_t txMailbox;
 
 
 	// ToDo (2): get temperature value
 
+	float temperature = tempSensorGetTemperature();
+	int16_t tempInt = (int16_t)(temperature * 10); // e.g. 23.4°C → 234
 
 
 	// ToDo prepare send data
 
+	txHeader.StdId = 0x3;
+	txHeader.ExtId = 0;
+	txHeader.IDE   = CAN_ID_STD;
+	txHeader.RTR   = CAN_RTR_DATA;
+	txHeader.DLC   = 2;
+	txHeader.TransmitGlobalTime = DISABLE;
+
+
+	txData[0] = (uint8_t)(tempInt >> 8) & 0xFF;
+	txData[1] = (uint8_t)(tempInt & 0xFF);
 
 
 	// ToDo send CAN frame
 
+	if (HAL_CAN_AddTxMessage(&canHandle, &txHeader, txData, &txMailbox) == HAL_OK) {
+		sendCnt++;
 
+		// ToDo display send counter and send data
+		LCD_SetColors(LCD_COLOR_GREEN, LCD_COLOR_BLACK);
+		LCD_SetPrintPosition(5,15);
+		printf("%5d", sendCnt);
 
-	// ToDo display send counter and send data
-
+		LCD_SetPrintPosition(11,1);
+		printf("Temp: %2d.%1d C   ",
+				tempInt / 10,
+				tempInt % 10);
+	}
 
 
 }
@@ -225,12 +254,12 @@ static void initCanPeripheral(void) {
 	}
 
 	/*##-4- Activate CAN RX notification #######################################*/
-//	HAL_NVIC_EnableIRQ(CAN1_RX0_IRQn);
-//	if (HAL_CAN_ActivateNotification(&canHandle, CAN_IT_RX_FIFO0_MSG_PENDING) != HAL_OK)
-//	{
-//		/* Notification Error */
-//		Error_Handler();
-//	}
+	//	HAL_NVIC_EnableIRQ(CAN1_RX0_IRQn);
+	//	if (HAL_CAN_ActivateNotification(&canHandle, CAN_IT_RX_FIFO0_MSG_PENDING) != HAL_OK)
+	//	{
+	//		/* Notification Error */
+	//		Error_Handler();
+	//	}
 
 }
 
