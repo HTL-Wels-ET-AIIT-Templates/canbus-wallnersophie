@@ -91,7 +91,6 @@ int main(void)
 		HAL_Delay(10);
 
 		// ToDo: send data over CAN when user button has been pressed
-
 		if (GetUserButtonPressed()){
 			if(!flm){
 				flm = 1;
@@ -102,8 +101,10 @@ int main(void)
 		}
 
 
-
 		// ToDo: check if data has been received
+		canReceiveTask();
+
+
 
 
 		// display timer

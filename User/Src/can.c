@@ -26,6 +26,8 @@
 
 CAN_HandleTypeDef     canHandle;
 
+
+
 /* Private function prototypes -----------------------------------------------*/
 static void initGpio(void);
 static void initCanPeripheral(void);
@@ -57,7 +59,7 @@ void canInit(void) {
 	LCD_SetPrintPosition(5,1);
 	printf("Send-Cnt:");
 	LCD_SetPrintPosition(5,15);
-	printf("%5d", 0);		// Null für init, dieser Platz am Display wird später noch Überscriben wo dann die Varaiable drinnen ist die hoch zählt
+	printf("%5d", 0);		// Null für init, dieser Platz am Display wird später noch überschriben wo dann die Varaiable drinnen ist die hoch zählt
 	LCD_SetPrintPosition(7,1);
 	printf("Recv-Cnt:");
 	LCD_SetPrintPosition(7,15);
@@ -94,7 +96,7 @@ void canSendTask(void) {
 	// ToDo (2): get temperature value
 
 	float temperature = tempSensorGetTemperature();
-	int16_t tempInt = (int16_t)(temperature * 10); // e.g. 23.4°C → 234
+	int16_t tempInt = (temperature * 10); // e.g. 23.4°C → 234
 
 
 	// ToDo prepare send data
@@ -107,8 +109,8 @@ void canSendTask(void) {
 	txHeader.TransmitGlobalTime = DISABLE;
 
 
-	txData[0] = (uint8_t)(tempInt >> 8) & 0xFF;
-	txData[1] = (uint8_t)(tempInt & 0xFF);
+	txData[0] = (tempInt >> 8) & 0xFF;
+	txData[1] = tempInt& 0xFF;
 
 
 	// ToDo send CAN frame
@@ -122,11 +124,9 @@ void canSendTask(void) {
 		printf("%5d", sendCnt);
 
 		LCD_SetPrintPosition(11,1);
-		printf("Temp: %2d.%1d C   ",
-				tempInt / 10,
-				tempInt % 10);
+		printf("Temp: %f   ",
+				temperature);
 	}
-
 
 }
 
@@ -138,22 +138,37 @@ void canSendTask(void) {
 void canReceiveTask(void) {
 	static unsigned int recvCnt = 0;
 
-
+	static CAN_RxHeaderTypeDef rxHeader;
+	static uint8_t  rxData[8];
 
 	// ToDo: check if CAN frame has been received
-
-
-
+	/* Check for RX pending */
+	if (HAL_CAN_GetRxFifoFillLevel(&canHandle, CAN_RX_FIFO0) == 0)
+		return;
 
 	// ToDo: Get CAN frame from RX fifo
+	/* Read message */
+	if (HAL_CAN_GetRxMessage(&canHandle, CAN_RX_FIFO0, &rxHeader, rxData) != HAL_OK){
+		return;
+	}
 
-
+	recvCnt++;
 
 	// ToDo: Process received CAN Frame (extract data)
-
-
+	/* Extract temperature */
+	int16_t temp = (rxData[0] << 8) | rxData[1];
+	int16_t Head = rxHeader.StdId;
 
 	// ToDo display recv counter and recv data
+	/* Update LCD */
+	LCD_SetColors(LCD_COLOR_GREEN, LCD_COLOR_BLACK);
+	LCD_SetPrintPosition(7,15);
+	printf("%5d", recvCnt);
+
+	LCD_SetPrintPosition(15,1);
+	printf("Recv-Data: %i ",temp);
+	LCD_SetPrintPosition(16,1);
+	printf("Recv-Head: 0x%04X ",Head);
 
 
 
@@ -200,7 +215,7 @@ static void initCanPeripheral(void) {
 	canHandle.Init.AutoRetransmission = ENABLE;
 	canHandle.Init.ReceiveFifoLocked = DISABLE;
 	canHandle.Init.TransmitFifoPriority = DISABLE;
-	canHandle.Init.Mode = CAN_MODE_NORMAL;
+	canHandle.Init.Mode = CAN_MODE_LOOPBACK;
 	canHandle.Init.SyncJumpWidth = CAN_SJW_1TQ;
 
 	// CAN Baudrate
