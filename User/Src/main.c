@@ -27,7 +27,6 @@
 #include "ts_calibration.h"
 #include "can.h"
 #include "cancpp.h"
-#include "uart.h"
 
 /* Private includes ----------------------------------------------------------*/
 
@@ -77,44 +76,35 @@ int main(void)
 
 	LCD_SetFont(&Font8);
 	LCD_SetColors(LCD_COLOR_MAGENTA, LCD_COLOR_BLACK); // TextColor, BackColor
-	LCD_DisplayStringAtLineMode(39, "copyright CAN Experts!", CENTER_MODE);
+	LCD_DisplayStringAtLineMode(39, "Sophie Wallner", CENTER_MODE);
 
 	// ToDo: set up CAN peripherals
 	canInit();
-	uartInit();
-	RingBuffer_t MsgRecieve;
-	uint8_t MsgRecieveArray[256] = {0};
-	ringBufferInit(&MsgRecieve, MsgRecieveArray, 256);
 
 
+	int flm = 0;
 
 	/* Infinite loop */
 	while (1)
 	{
 		//execute main loop every 100ms
-		//		HAL_Delay(10);
+		HAL_Delay(10);
 
 		// ToDo: send data over CAN when user button has been pressed
-		if(GetUserButtonPressed())
-		{
-			canSendBegin("Lukas");
-
-			canSendLetter('c', 1);
-
-			canSendLetter('a', 2);
-
-			canSendLetter('n', 3);
-
-			canSendLetter('b', 4);
-
-			canSendEnd();
-
-			HAL_Delay(100);
+		if (GetUserButtonPressed()){
+			if(!flm){
+				flm = 1;
+				canSendTask();
+			}
+		}else{
+			flm = 0;
 		}
-		canReceiveTask(&MsgRecieve);
-		uartSendMsgIfAvailable(&MsgRecieve);
-		uartTask("Mario");
+
+
 		// ToDo: check if data has been received
+		canReceiveTask();
+
+
 
 
 		// display timer
@@ -124,12 +114,14 @@ int main(void)
 		LCD_SetPrintPosition(0, 18);
 		printf("   Timer: %.1f", cnt/1000.0);
 
+//		// test touch interface
+//		int x, y;
+//		if (GetTouchState(&x, &y)) {
+//			LCD_FillCircle(x, y, 5);
+//		}
 
-		// test touch interface
-		int x, y;
-		if (GetTouchState(&x, &y)) {
-			LCD_FillCircle(x, y, 5);
-		}
+
+
 
 
 	}
@@ -168,4 +160,5 @@ static int GetTouchState (int* xCoord, int* yCoord) {
 
 	return touchclick;
 }
+
 
