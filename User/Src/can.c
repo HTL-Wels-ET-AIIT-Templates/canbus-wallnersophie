@@ -74,7 +74,7 @@ void canInit(void) {
 
 	// ToDo (2): set up DS18B20 (temperature sensor)
 
-	tempSensorInit();
+	tempSensorInit(); // angeschlossen an PG9
 
 }
 
